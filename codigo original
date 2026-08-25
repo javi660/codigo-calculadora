@@ -1,0 +1,438 @@
+#Juan Puello Y Javier Orozco
+import tkinter as tk
+from tkinter import ttk, messagebox
+
+DIGITO_A_VALOR = {
+    '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
+    '8': 8, '9': 9, 'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15
+}
+
+VALOR_A_DIGITO = {
+    valor: digito for digito, valor in DIGITO_A_VALOR.items()
+}
+
+
+def char_a_valor(caracter):
+    caracter = caracter.upper()
+
+    if caracter not in DIGITO_A_VALOR:
+        raise ValueError(
+            f"El carácter '{caracter}' no es válido."
+        )
+
+    return DIGITO_A_VALOR[caracter]
+
+
+def valor_a_char(valor):
+    return VALOR_A_DIGITO[valor]
+
+
+
+def base_a_decimal(numero_str, base_origen):
+
+    numero_str = numero_str.strip().upper()
+
+    if numero_str == "":
+        raise ValueError("El número está vacío.")
+
+    total = 0
+    posicion = 0
+
+    for caracter in reversed(numero_str):
+
+        valor_digito = char_a_valor(caracter)
+
+        if valor_digito >= base_origen:
+            raise ValueError(
+                f"El dígito '{caracter}' no es válido en base {base_origen}."
+            )
+
+        total += valor_digito * (base_origen ** posicion)
+
+        posicion += 1
+
+    return total
+
+
+def decimal_a_base(valor_decimal, base_destino):
+
+    if valor_decimal == 0:
+        return "0"
+
+    residuos = []
+    cociente = valor_decimal
+
+    while cociente > 0:
+
+        residuo = cociente % base_destino
+
+        residuos.append(
+            valor_a_char(residuo)
+        )
+
+        cociente = cociente // base_destino
+
+    residuos.reverse()
+
+    return "".join(residuos)
+
+
+
+NOMBRE_BASE = {
+    2: "Binario",
+    8: "Octal",
+    10: "Decimal",
+    16: "Hexadecimal"
+}
+
+
+def convertir_a_todas_las_bases(numero_str, base_origen):
+
+    valor_decimal = base_a_decimal(
+        numero_str,
+        base_origen
+    )
+
+    resultados = {}
+
+    for base in (2, 8, 10, 16):
+
+        resultados[base] = decimal_a_base(
+            valor_decimal,
+            base
+        )
+
+    return valor_decimal, resultados
+
+
+
+def convertir():
+
+    numero = entrada_numero.get().strip()
+
+    if numero == "":
+        messagebox.showerror(
+            "Error",
+            "Digita un número."
+        )
+        return
+
+    base_texto = combo_base.get()
+
+    bases = {
+        "Binario": 2,
+        "Octal": 8,
+        "Decimal": 10,
+        "Hexadecimal": 16
+    }
+
+    base_origen = bases[base_texto]
+
+    try:
+
+        valor_decimal, resultados = convertir_a_todas_las_bases(
+            numero,
+            base_origen
+        )
+
+        resultado_binario.config(
+            text=resultados[2]
+        )
+
+        resultado_octal.config(
+            text=resultados[8]
+        )
+
+        resultado_decimal.config(
+            text=resultados[10]
+        )
+
+        resultado_hexadecimal.config(
+            text=resultados[16]
+        )
+
+    except ValueError as error:
+
+        messagebox.showerror(
+            "Número inválido",
+            str(error)
+        )
+
+
+def limpiar():
+
+    entrada_numero.delete(
+        0,
+        tk.END
+    )
+
+    resultado_binario.config(
+        text="-"
+    )
+
+    resultado_octal.config(
+        text="-"
+    )
+
+    resultado_decimal.config(
+        text="-"
+    )
+
+    resultado_hexadecimal.config(
+        text="-"
+    )
+
+
+
+ventana = tk.Tk()
+
+ventana.title(
+    "Conversor de Sistemas Numéricos"
+)
+
+ventana.geometry(
+    "450x430"
+)
+
+ventana.resizable(
+    False,
+    False
+)
+
+
+titulo = tk.Label(
+    ventana,
+    text="Conversor de Sistemas Numéricos",
+    font=("Arial", 18, "bold")
+)
+
+titulo.pack(
+    pady=20
+)
+
+
+
+marco_entrada = tk.Frame(
+    ventana
+)
+
+marco_entrada.pack(
+    pady=5
+)
+
+tk.Label(
+    marco_entrada,
+    text="Base del número:",
+    font=("Arial", 11)
+).grid(
+    row=0,
+    column=0,
+    padx=5,
+    pady=5
+)
+
+
+combo_base = ttk.Combobox(
+    marco_entrada,
+    values=[
+        "Binario",
+        "Octal",
+        "Decimal",
+        "Hexadecimal"
+    ],
+    state="readonly",
+    width=18
+)
+
+combo_base.current(0)
+
+combo_base.grid(
+    row=0,
+    column=1,
+    padx=5,
+    pady=5
+)
+
+
+
+tk.Label(
+    marco_entrada,
+    text="Número:",
+    font=("Arial", 11)
+).grid(
+    row=1,
+    column=0,
+    padx=5,
+    pady=10
+)
+
+
+entrada_numero = tk.Entry(
+    marco_entrada,
+    width=21,
+    font=("Arial", 12)
+)
+
+entrada_numero.grid(
+    row=1,
+    column=1,
+    padx=5,
+    pady=10
+)
+
+
+
+marco_botones = tk.Frame(
+    ventana
+)
+
+marco_botones.pack(
+    pady=10
+)
+
+
+boton_convertir = tk.Button(
+    marco_botones,
+    text="Convertir",
+    width=15,
+    command=convertir
+)
+
+boton_convertir.grid(
+    row=0,
+    column=0,
+    padx=5
+)
+
+
+boton_limpiar = tk.Button(
+    marco_botones,
+    text="Limpiar",
+    width=15,
+    command=limpiar
+)
+
+boton_limpiar.grid(
+    row=0,
+    column=1,
+    padx=5
+)
+
+marco_resultados = tk.LabelFrame(
+    ventana,
+    text="Resultados",
+    font=("Arial", 11),
+    padx=15,
+    pady=10
+)
+
+marco_resultados.pack(
+    padx=25,
+    pady=10,
+    fill="both"
+)
+
+
+tk.Label(
+    marco_resultados,
+    text="Binario:",
+    font=("Arial", 11, "bold")
+).grid(
+    row=0,
+    column=0,
+    sticky="w",
+    pady=5
+)
+
+resultado_binario = tk.Label(
+    marco_resultados,
+    text="-",
+    font=("Arial", 11)
+)
+
+resultado_binario.grid(
+    row=0,
+    column=1,
+    sticky="w",
+    padx=20
+)
+
+
+tk.Label(
+    marco_resultados,
+    text="Octal:",
+    font=("Arial", 11, "bold")
+).grid(
+    row=1,
+    column=0,
+    sticky="w",
+    pady=5
+)
+
+resultado_octal = tk.Label(
+    marco_resultados,
+    text="-",
+    font=("Arial", 11)
+)
+
+resultado_octal.grid(
+    row=1,
+    column=1,
+    sticky="w",
+    padx=20
+)
+
+
+
+tk.Label(
+    marco_resultados,
+    text="Decimal:",
+    font=("Arial", 11, "bold")
+).grid(
+    row=2,
+    column=0,
+    sticky="w",
+    pady=5
+)
+
+resultado_decimal = tk.Label(
+    marco_resultados,
+    text="-",
+    font=("Arial", 11)
+)
+
+resultado_decimal.grid(
+    row=2,
+    column=1,
+    sticky="w",
+    padx=20
+)
+
+
+tk.Label(
+    marco_resultados,
+    text="Hexadecimal:",
+    font=("Arial", 11, "bold")
+).grid(
+    row=3,
+    column=0,
+    sticky="w",
+    pady=5
+)
+
+resultado_hexadecimal = tk.Label(
+    marco_resultados,
+    text="-",
+    font=("Arial", 11)
+)
+
+resultado_hexadecimal.grid(
+    row=3,
+    column=1,
+    sticky="w",
+    padx=20
+)
+
+
+
+ventana.mainloop()
