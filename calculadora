@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conversor de Sistemas Numéricos</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #e8eef7, #f8fafc);
+      color: #1f2937;
+    }
+    .contenedor {
+      width: min(520px, 92%);
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 12px 35px rgba(0,0,0,.12);
+    }
+    h1 {
+      text-align: center;
+      margin: 0 0 25px;
+      font-size: 26px;
+    }
+    .campo { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 7px;
+    }
+    select, input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+    }
+    select:focus, input:focus {
+      border-color: #2563eb;
+    }
+    .botones {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    button {
+      flex: 1;
+      padding: 12px;
+      border: 0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #convertir { background: #2563eb; color: white; }
+    #limpiar { background: #e5e7eb; color: #111827; }
+    button:hover { opacity: .9; }
+    .resultados {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 18px;
+      margin-top: 10px;
+    }
+    .resultados h2 {
+      font-size: 18px;
+      margin: 0 0 14px;
+    }
+    .resultado {
+      display: flex;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 1px solid #eee;
+      gap: 15px;
+    }
+    .resultado:last-child { border-bottom: 0; }
+    .resultado span:last-child {
+      font-weight: bold;
+      word-break: break-all;
+    }
+    .error {
+      display: none;
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <main class="contenedor">
+    <h1>Conversor de Sistemas Numéricos</h1>
+
+    <div class="campo">
+      <label for="base">Base del número:</label>
+      <select id="base">
+        <option value="2">Binario</option>
+        <option value="8">Octal</option>
+        <option value="10">Decimal</option>
+        <option value="16">Hexadecimal</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label for="numero">Número:</label>
+      <input id="numero" type="text" placeholder="Escribe un número">
+    </div>
+
+    <div class="botones">
+      <button id="convertir">Convertir</button>
+      <button id="limpiar">Limpiar</button>
+    </div>
+
+    <section class="resultados">
+      <h2>Resultados</h2>
+      <div class="resultado"><span>Binario:</span><span id="binario">-</span></div>
+      <div class="resultado"><span>Octal:</span><span id="octal">-</span></div>
+      <div class="resultado"><span>Decimal:</span><span id="decimal">-</span></div>
+      <div class="resultado"><span>Hexadecimal:</span><span id="hexadecimal">-</span></div>
+    </section>
+
+    <div id="error" class="error"></div>
+  </main>
+
+  <script>
+    const DIGITO_A_VALOR = {
+      '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7,
+      '8': 8, '9': 9, 'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15
+    };
+
+    const VALOR_A_DIGITO = "0123456789ABCDEF";
+
+    function mostrarError(mensaje) {
+      const error = document.getElementById("error");
+      error.textContent = mensaje;
+      error.style.display = "block";
+    }
+
+    function ocultarError() {
+      document.getElementById("error").style.display = "none";
+    }
+
+    function baseADecimal(numero, baseOrigen) {
+      numero = numero.trim().toUpperCase();
+
+      if (numero === "") {
+        throw new Error("Digita un número.");
+      }
+
+      let total = 0;
+      let posicion = 0;
+
+      for (let i = numero.length - 1; i >= 0; i--) {
+        const caracter = numero[i];
+
+        if (!(caracter in DIGITO_A_VALOR)) {
+          throw new Error(`El carácter '${caracter}' no es válido.`);
+        }
+
+        const valorDigito = DIGITO_A_VALOR[caracter];
+
+        if (valorDigito >= baseOrigen) {
+          throw new Error(`El dígito '${caracter}' no es válido en base ${baseOrigen}.`);
+        }
+
+        total += valorDigito * (baseOrigen ** posicion);
+        posicion++;
+      }
+
+      return total;
+    }
+
+    function decimalABase(valorDecimal, baseDestino) {
+      if (valorDecimal === 0) return "0";
+
+      const residuos = [];
+      let cociente = valorDecimal;
+
+      while (cociente > 0) {
+        const residuo = cociente % baseDestino;
+        residuos.push(VALOR_A_DIGITO[residuo]);
+        cociente = Math.floor(cociente / baseDestino);
+      }
+
+      return residuos.reverse().join("");
+    }
+
+    function convertir() {
+      ocultarError();
+
+      const numero = document.getElementById("numero").value;
+      const baseOrigen = Number(document.getElementById("base").value);
+
+      try {
+        const valorDecimal = baseADecimal(numero, baseOrigen);
+
+        document.getElementById("binario").textContent = decimalABase(valorDecimal, 2);
+        document.getElementById("octal").textContent = decimalABase(valorDecimal, 8);
+        document.getElementById("decimal").textContent = decimalABase(valorDecimal, 10);
+        document.getElementById("hexadecimal").textContent = decimalABase(valorDecimal, 16);
+      } catch (error) {
+        mostrarError(error.message);
+      }
+    }
+
+    function limpiar() {
+      document.getElementById("numero").value = "";
+      document.getElementById("binario").textContent = "-";
+      document.getElementById("octal").textContent = "-";
+      document.getElementById("decimal").textContent = "-";
+      document.getElementById("hexadecimal").textContent = "-";
+      ocultarError();
+    }
+
+    document.getElementById("convertir").addEventListener("click", convertir);
+    document.getElementById("limpiar").addEventListener("click", limpiar);
+
+    document.getElementById("numero").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") convertir();
+    });
+  </script>
+</body>
+</html>
